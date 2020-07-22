@@ -1,0 +1,81 @@
+<h1>Twilio Video Meet</h1>
+<p>
+<br><button type="button" id="create">Create a Meeting</button><br><br>
+<button type="button" id="join">Join Meeting Room</button><br><br>
+</p>
+
+<p style="margin-top:50px">
+<br><button type="button" id="room_connect">Connect to Room</button><br><br>
+<button type="button" id="room_join">Join Meeting Room</button><br><br>
+</p>
+
+<p style="margin-top:50px">
+  <%= @room.inspect %>
+</p>
+
+<script>
+var room_name = 'hellomeet_16'
+var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTS2ZhNjlhNGViYTM4ZGM0YTQ3ZjFlOWEwMTQ5MGYwODI3LTE1OTU0MzQwMzAiLCJpc3MiOiJTS2ZhNjlhNGViYTM4ZGM0YTQ3ZjFlOWEwMTQ5MGYwODI3Iiwic3ViIjoiQUM0Y2M3MWQxN2E2MWE4OTlkMjgyMmNlMjQzNjhkZWZlZCIsImV4cCI6MTU5NTQzNzYzMCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoiZmlyc3QiLCJ2aWRlbyI6e319fQ.2s1qxWRgb3yUsyeB262w3i2p0JbVXiF0XbhBP7QtLvQ'
+
+$('#create').click(function() {
+  console.log("Hello world");
+  $.ajax({
+    url: "/welcome/create",
+    method: "POST",
+    success: function(data) {
+      console.log(data);
+    }
+  })
+});
+
+$('#join').click(function() {
+  console.log("Hold on Joining the room..!!");
+  Twilio.Video.connect(token).then(function(room) {
+    console.log('Successfully joined a Room: ', room);
+  }, function(error) {
+      console.error('Unable to connect to Room: ' +  error.message);
+  });
+});
+
+$('#room_connect').click(function() {
+  Twilio.Video.connect(token, { name:room_name }).then(room => {
+    console.log('Successfully joined a Room: ', room);
+    let localVideoTrack = Array.from(room.localParticipant.videoTracks.values())[0].track;
+
+    window.room = room;
+    room.on('participantConnected', participant => {
+      console.log('A remote Participant connected: ', participant);
+    });
+  }, error => {
+    console.error('Unable to connect to Room: ', error.message);
+  });
+
+
+  function displayVideo () {
+    Twilio.Video.createLocalTracks({
+      audio: true,
+      video: { width: 640 }
+    }).then(localTracks => {
+      return Twilio.Video.connect(token, {
+        name: room_name,
+        tracks: localTracks
+      });
+    }).then(room => {
+      console.log(`Connected to Room: ${room.name}`);
+    });
+  }
+});
+
+$('#room_join').click(function() {
+  Twilio.Video.connect(token, { name:room_name }).then(room => {
+    console.log('Successfully joined a Room: ', room);
+    room.on('participantConnected', participant => {
+      console.log('A remote Participant connected: ', participant);
+    });
+  }, error => {
+    console.error('Unable to connect to Room: ', error.message);
+  });
+});
+
+</script>
+
